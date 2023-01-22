@@ -275,10 +275,13 @@ def inference(csv_file, output_dir, checkpoint_path,
         filename = row['wav']
         text = row['txt1']
 
-        sequence = np.array(text_to_sequence(text, ['english_cleaners']))[None, :]
-        sequence = torch.autograd.Variable(torch.from_numpy(sequence)).cuda().long()
-        mel_outputs, mel_outputs_postnet, _, alignments = model.inference(sequence)
-        np.save(os.path.join(output_dir, filename + '.npy'), mel_outputs.float().data.cpu().numpy()[0])
+        output_filename = os.path.join(output_dir, filename + '.npy')
+
+        if not os.path.exists(output_filename):
+            sequence = np.array(text_to_sequence(text, ['english_cleaners']))[None, :]
+            sequence = torch.autograd.Variable(torch.from_numpy(sequence)).cuda().long()
+            mel_outputs, mel_outputs_postnet, _, alignments = model.inference(sequence)
+            np.save(os.path.join(output_dir, filename + '.npy'), mel_outputs.float().data.cpu().numpy()[0])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
