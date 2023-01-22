@@ -2,7 +2,9 @@ import os
 import time
 import argparse
 import math
+import pandas as pd
 from numpy import finfo
+import numpy as np
 
 import torch
 from distributed import apply_gradient_allreduce
@@ -15,6 +17,7 @@ from data_utils import TextMelLoader, TextMelCollate
 from loss_function import Tacotron2Loss
 from logger import Tacotron2Logger
 from hparams import create_hparams
+from text import text_to_sequence
 
 
 def reduce_tensor(tensor, n_gpus):
@@ -254,25 +257,34 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
 
             iteration += 1
 
-def inference():
-    pass
+def inference(csv_file, output_dir, checkpoint_path, 
+        hparams):
+    checkpoint_path = "tacotron2_statedict.pt"
+    model = load_model(hparams)
+    model.load_state_dict(torch.load(checkpoint_path)['state_dict'])
+    _ = model.cuda().eval().half()
+
+    df = pd.read_csv(csv_file, delimiter='|', names=['wav', 'txt1', 'txt2'])
+    
+    for index, row in df.iterrows():
+        filename = row['wav']
+        text = row['txt1']
+
+        sequence = np.array(text_to_sequence(text, ['english_cleaners']))[None, :]
+        sequence = torch.autograd.Variable(torch.from_numpy(sequence)).cuda().long()
+        mel_outputs, mel_outputs_postnet, _, alignments = model.inference(sequence)
+        np.save(os.path.join(output_dir, filename + '.npy'), mel_outputs.float().data.cpu().numpy()[0])
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--input_directory', type=str,
+                        help='directory to save checkpoints')
     parser.add_argument('-o', '--output_directory', type=str,
                         help='directory to save checkpoints')
-    parser.add_argument('-l', '--log_directory', type=str,
-                        help='directory to save tensorboard logs')
+    
     parser.add_argument('-c', '--checkpoint_path', type=str, default=None,
                         required=False, help='checkpoint path')
-    parser.add_argument('--warm_start', action='store_true',
-                        help='load model weights only, ignore specified layers')
-    parser.add_argument('--n_gpus', type=int, default=1,
-                        required=False, help='number of gpus')
-    parser.add_argument('--rank', type=int, default=0,
-                        required=False, help='rank of current gpu')
-    parser.add_argument('--group_name', type=str, default='group_name',
-                        required=False, help='Distributed group name')
     parser.add_argument('--hparams', type=str,
                         required=False, help='comma separated name=value pairs')
 
@@ -287,6 +299,6 @@ if __name__ == '__main__':
     print("Distributed Run:", hparams.distributed_run)
     print("cuDNN Enabled:", hparams.cudnn_enabled)
     print("cuDNN Benchmark:", hparams.cudnn_benchmark)
-    
-    inference(args.input_directory, args.output_directory, args.checkpoint_path, 
+
+    inference(args.csv_file, args.output_dir, args.checkpoint_path, 
         hparams)
