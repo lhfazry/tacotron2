@@ -5,7 +5,7 @@ import math
 import pandas as pd
 from numpy import finfo
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 import torch
 from distributed import apply_gradient_allreduce
