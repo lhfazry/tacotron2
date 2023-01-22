@@ -270,6 +270,7 @@ def inference(csv_file, output_dir, checkpoint_path,
     _ = model.cuda().eval().half()
 
     df = pd.read_csv(csv_file, delimiter='|', names=['wav', 'txt1', 'txt2'])
+    df[::-1]
     
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
         filename = row['wav']
