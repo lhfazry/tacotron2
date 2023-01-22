@@ -282,7 +282,7 @@ def inference(csv_file, output_dir, checkpoint_path,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input_dir', type=str,
+    parser.add_argument('-i', '--csv_file', type=str,
                         help='directory to save checkpoints')
     parser.add_argument('-o', '--output_dir', type=str,
                         help='directory to save checkpoints')
