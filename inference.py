@@ -5,6 +5,7 @@ import math
 import pandas as pd
 from numpy import finfo
 import numpy as np
+import tqdm
 
 import torch
 from distributed import apply_gradient_allreduce
@@ -262,7 +263,7 @@ def inference(csv_file, output_dir, checkpoint_path,
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        
+
     checkpoint_path = "tacotron2_statedict.pt"
     model = load_model(hparams)
     model.load_state_dict(torch.load(checkpoint_path)['state_dict'])
@@ -270,7 +271,7 @@ def inference(csv_file, output_dir, checkpoint_path,
 
     df = pd.read_csv(csv_file, delimiter='|', names=['wav', 'txt1', 'txt2'])
     
-    for index, row in df.iterrows():
+    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
         filename = row['wav']
         text = row['txt1']
 
@@ -281,7 +282,7 @@ def inference(csv_file, output_dir, checkpoint_path,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--input_dir', type=str,
+    parser.add_argument('-i', '--input_dir', type=str,
                         help='directory to save checkpoints')
     parser.add_argument('-o', '--output_dir', type=str,
                         help='directory to save checkpoints')
