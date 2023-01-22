@@ -1,2 +1,2 @@
 Inference:
-CUDA_VISIBLE_DEVICES=4 python inference.py --csv_file=/workspace/LJSpeech-1.1/metadata.csv --output_dir=/workspace/LJSpeech-1.1/mels
+CUDA_VISIBLE_DEVICES=4 python inference.py --csv_file=/workspace/LJSpeech-1.1/metadata.csv --output_dir=/workspace/LJSpeech-1.1/mels >> logs_inferences.log 2>&1 &
