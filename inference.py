@@ -259,6 +259,10 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
 
 def inference(csv_file, output_dir, checkpoint_path, 
         hparams):
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
     checkpoint_path = "tacotron2_statedict.pt"
     model = load_model(hparams)
     model.load_state_dict(torch.load(checkpoint_path)['state_dict'])
@@ -275,12 +279,11 @@ def inference(csv_file, output_dir, checkpoint_path,
         mel_outputs, mel_outputs_postnet, _, alignments = model.inference(sequence)
         np.save(os.path.join(output_dir, filename + '.npy'), mel_outputs.float().data.cpu().numpy()[0])
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--input_directory', type=str,
+    parser.add_argument('-o', '--input_dir', type=str,
                         help='directory to save checkpoints')
-    parser.add_argument('-o', '--output_directory', type=str,
+    parser.add_argument('-o', '--output_dir', type=str,
                         help='directory to save checkpoints')
     
     parser.add_argument('-c', '--checkpoint_path', type=str, default=None,
